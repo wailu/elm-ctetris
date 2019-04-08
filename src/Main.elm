@@ -85,10 +85,6 @@ type Msg
     = Tick Time.Posix
 
 
-type Ans
-    = NewPoint ( Int, Int )
-
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
