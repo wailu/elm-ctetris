@@ -49,6 +49,16 @@ type alias Unit =
     Svg Msg
 
 
+type Tetromino
+    = I
+    | O
+    | T
+    | S
+    | Z
+    | J
+    | L
+
+
 
 -- Update
 
