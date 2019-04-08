@@ -2,11 +2,11 @@ module Main exposing (Model)
 
 import Array exposing (..)
 import Browser
-import Grid exposing (..)
 import Html exposing (Html, div, h1, span, td)
 import Html.Attributes exposing (style)
+import Random
 import Svg exposing (Svg, rect, svg)
-import Svg.Attributes exposing (color, height, width)
+import Svg.Attributes exposing (fill, height, width)
 import Task
 import Time
 
@@ -49,14 +49,18 @@ initUnit i j =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { board = Grid.initialize 10 20 initUnit
+    ( { board = initialize 20 (\_ -> initialize 10 (\_ -> Nothing))
       }
     , Task.perform Tick Time.now
     )
 
 
 type alias Board =
-    Grid (Maybe Unit)
+    Array Line
+
+
+type alias Line =
+    Array (Maybe Unit)
 
 
 type alias Unit =
@@ -81,11 +85,33 @@ type Msg
     = Tick Time.Posix
 
 
+type Ans
+    = NewPoint ( Int, Int )
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Tick x ->
-            Debug.log "tick" ( model, Cmd.none )
+            let
+                testUnit =
+                    Just
+                        (svg
+                            [ width "20", height "20" ]
+                            [ rect [ height "20", width "20", fill "white" ] [] ]
+                        )
+            in
+            Debug.log "tick"
+                ( { model
+                    | board =
+                        model.board
+                            |> get 0
+                            |> Maybe.map (\line -> set 2 testUnit line)
+                            |> Maybe.map (\line -> set 2 line model.board)
+                            |> Maybe.withDefault model.board
+                  }
+                , Cmd.none
+                )
 
 
 
@@ -101,10 +127,10 @@ renderUnit : Maybe Unit -> Html Msg
 renderUnit piece =
     case piece of
         Nothing ->
-            svg [ width "20", height "20" ] [ rect [ height "20", width "20", color "black" ] [] ]
+            svg [ width "20", height "20" ] [ rect [ height "20", width "20", fill "black" ] [] ]
 
         Just x ->
-            svg [] [ x ]
+            x
 
 
 collateLines : Array (Html Msg) -> Html Msg
@@ -115,7 +141,6 @@ collateLines arr =
 renderBoard : Board -> Html Msg
 renderBoard board =
     board
-        |> Grid.rows
         |> Array.map (Array.map renderUnit)
         |> Array.map renderLine
         |> collateLines
@@ -123,4 +148,4 @@ renderBoard board =
 
 view : Model -> Html Msg
 view model =
-    div [] [ renderBoard model.board ]
+    div [] [ renderBoard (Debug.log "here" model.board) ]
