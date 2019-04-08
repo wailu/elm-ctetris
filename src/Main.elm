@@ -7,6 +7,8 @@ import Html exposing (Html, div, h1, span, td)
 import Html.Attributes exposing (style)
 import Svg exposing (Svg, rect, svg)
 import Svg.Attributes exposing (color, height, width)
+import Task
+import Time
 
 
 
@@ -14,11 +16,21 @@ import Svg.Attributes exposing (color, height, width)
 
 
 main =
-    Browser.sandbox
+    Browser.element
         { init = init
         , view = view
         , update = update
+        , subscriptions = subscriptions
         }
+
+
+
+-- Subscriptions
+
+
+subscriptions : Model -> Sub Msg
+subscriptions model =
+    Time.every 1000 Tick
 
 
 
@@ -35,10 +47,12 @@ initUnit i j =
     Nothing
 
 
-init : Model
-init =
-    { board = Grid.initialize 10 20 initUnit
-    }
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( { board = Grid.initialize 10 20 initUnit
+      }
+    , Task.perform Tick Time.now
+    )
 
 
 type alias Board =
@@ -64,14 +78,14 @@ type Tetromino
 
 
 type Msg
-    = Tick
+    = Tick Time.Posix
 
 
-update : Msg -> Model -> Model
+update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Tick ->
-            model
+        Tick x ->
+            Debug.log "tick" ( model, Cmd.none )
 
 
 
