@@ -27,11 +27,10 @@ main =
 
 type alias Model =
     { board : Board
-    , piece : Maybe Piece
     }
 
 
-initUnit : Int -> Int -> Maybe Piece
+initUnit : Int -> Int -> Maybe Unit
 initUnit i j =
     Nothing
 
@@ -39,15 +38,14 @@ initUnit i j =
 init : Model
 init =
     { board = Grid.initialize 10 20 initUnit
-    , piece = Nothing
     }
 
 
 type alias Board =
-    Grid (Maybe Piece)
+    Grid (Maybe Unit)
 
 
-type alias Piece =
+type alias Unit =
     Svg Msg
 
 
@@ -75,7 +73,7 @@ renderLine arr =
     div [ style "display" "flex" ] (toList arr)
 
 
-renderUnit : Maybe Piece -> Html Msg
+renderUnit : Maybe Unit -> Html Msg
 renderUnit piece =
     case piece of
         Nothing ->
