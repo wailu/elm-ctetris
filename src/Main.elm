@@ -39,20 +39,18 @@ subscriptions model =
 
 type alias Model =
     { board : Board
+    , moving_piece : List ( Int, Int )
     }
 
 
 emptyBoard : Board
 emptyBoard =
-    initialize 20 (\_ -> initialize 10 (\_ -> Nothing)) |> setOccupied 0 4
+    initialize 20 (\_ -> initialize 10 (\_ -> Nothing))
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { board = emptyBoard
-      }
-    , Task.perform Tick Time.now
-    )
+    update (NewPoint ( 1, 2 )) { board = emptyBoard, moving_piece = [] }
 
 
 type alias Board =
@@ -138,11 +136,13 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewPoint ( x, y ) ->
-            ( { model
-                | board = setOccupied x y model.board
-              }
-            , Cmd.none
-            )
+            let
+                coordinates =
+                    [ ( -4, 5 ), ( -3, 5 ), ( -2, 5 ), ( -1, 5 ) ]
+            in
+            update
+                (Shift coordinates)
+                { model | moving_piece = coordinates }
 
         Tick _ ->
             let
@@ -163,10 +163,14 @@ update msg model =
                 stillBoard =
                     model.board |> map (\x -> map (\y -> eraseNonStill y) x)
             in
-            update (Shift [ ( 1, 0 ), ( 2, 3 ) ]) { model | board = stillBoard }
+            update (Shift model.moving_piece) { model | board = stillBoard }
 
         Shift xs ->
-            ( { model | board = draw xs model.board }, Cmd.none )
+            let
+                newCoordinates =
+                    xs |> List.map (\( y, x ) -> ( y + 1, x ))
+            in
+            ( { model | board = draw newCoordinates model.board, moving_piece = newCoordinates }, Cmd.none )
 
 
 
