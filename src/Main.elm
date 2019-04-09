@@ -44,7 +44,7 @@ type alias Model =
 
 emptyBoard : Board
 emptyBoard =
-    initialize 20 (\_ -> initialize 10 (\_ -> Nothing))
+    initialize 20 (\_ -> initialize 10 (\_ -> Nothing)) |> setOccupied 0 4
 
 
 init : () -> ( Model, Cmd Msg )
@@ -161,11 +161,10 @@ update msg model =
                 stillBoard =
                     model.board |> map (\x -> map (\y -> eraseNonStill y) x)
             in
-            ( { model | board = stillBoard }, newPoint )
+            ( { model | board = draw [ ( 0, 0 ), ( 0, 1 ), ( 0, 2 ) ] stillBoard }, Cmd.none )
 
 
 
--- ( { model | board = model.board }, newPoint )
 -- View
 
 
