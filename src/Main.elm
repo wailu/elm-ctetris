@@ -30,7 +30,7 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every 1000 Tick
+    Time.every 200 Tick
 
 
 
@@ -42,14 +42,14 @@ type alias Model =
     }
 
 
-initUnit : Int -> Int -> Maybe Unit
-initUnit i j =
-    Nothing
+emptyBoard : Board
+emptyBoard =
+    initialize 20 (\_ -> initialize 10 (\_ -> Nothing))
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { board = initialize 20 (\_ -> initialize 10 (\_ -> Nothing))
+    ( { board = emptyBoard
       }
     , Task.perform Tick Time.now
     )
@@ -83,12 +83,23 @@ type Tetromino
 
 type Msg
     = Tick Time.Posix
+    | NewPoint ( Int, Int )
+
+
+point : Random.Generator ( Int, Int )
+point =
+    Random.pair (Random.int 0 9) (Random.int 0 19)
+
+
+newPoint : Cmd Msg
+newPoint =
+    Random.generate NewPoint point
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        Tick x ->
+        NewPoint ( x, y ) ->
             let
                 testUnit =
                     Just
@@ -102,12 +113,15 @@ update msg model =
                     | board =
                         model.board
                             |> get 0
-                            |> Maybe.map (\line -> set 2 testUnit line)
-                            |> Maybe.map (\line -> set 2 line model.board)
+                            |> Maybe.map (\line -> set x testUnit line)
+                            |> Maybe.map (\line -> set y line model.board)
                             |> Maybe.withDefault model.board
                   }
                 , Cmd.none
                 )
+
+        Tick _ ->
+            ( { model | board = emptyBoard }, newPoint )
 
 
 
