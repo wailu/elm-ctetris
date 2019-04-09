@@ -83,11 +83,13 @@ type Tetromino
 
 
 -- Update
+-- Add a Shift Msg
 
 
 type Msg
     = Tick Time.Posix
     | NewPoint ( Int, Int )
+    | Shift (List ( Int, Int ))
 
 
 point : Random.Generator ( Int, Int )
@@ -161,7 +163,10 @@ update msg model =
                 stillBoard =
                     model.board |> map (\x -> map (\y -> eraseNonStill y) x)
             in
-            ( { model | board = draw [ ( 0, 0 ), ( 0, 1 ), ( 0, 2 ) ] stillBoard }, Cmd.none )
+            update (Shift [ ( 1, 0 ), ( 2, 3 ) ]) { model | board = stillBoard }
+
+        Shift xs ->
+            ( { model | board = draw xs model.board }, Cmd.none )
 
 
 
