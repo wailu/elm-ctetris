@@ -64,7 +64,11 @@ type alias Line =
 
 
 type alias Unit =
-    Svg Msg
+    { drawing : Svg Msg
+    , still : Bool
+    , xPosition : Int
+    , yPosition : Int
+    }
 
 
 type Tetromino
@@ -88,7 +92,7 @@ type Msg
 
 point : Random.Generator ( Int, Int )
 point =
-    Random.pair (Random.int 0 9) (Random.int 0 19)
+    Random.pair (Random.int 0 19) (Random.int 0 9)
 
 
 newPoint : Cmd Msg
@@ -96,32 +100,50 @@ newPoint =
     Random.generate NewPoint point
 
 
+setOccupied : Int -> Int -> Board -> Board
+setOccupied x y board =
+    let
+        testUnit =
+            { drawing =
+                svg
+                    [ width "20", height "20" ]
+                    [ rect [ height "20", width "20", fill "white" ] [] ]
+            , still = False
+            , xPosition = 0
+            , yPosition = 4
+            }
+    in
+    board
+        |> get x
+        |> Maybe.map (\row -> set y (Just testUnit) row)
+        |> Maybe.map (\col -> set x col board)
+        |> Maybe.withDefault board
+
+
+draw : List ( Int, Int ) -> Board -> Board
+draw lst board =
+    let
+        newLst =
+            List.drop 1 lst
+
+        maybeHead =
+            List.head lst
+    in
+    maybeHead |> Maybe.map (\( x, y ) -> setOccupied x y board) |> Maybe.map (\nb -> draw newLst nb) |> Maybe.withDefault board
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         NewPoint ( x, y ) ->
-            let
-                testUnit =
-                    Just
-                        (svg
-                            [ width "20", height "20" ]
-                            [ rect [ height "20", width "20", fill "white" ] [] ]
-                        )
-            in
-            Debug.log "tick"
-                ( { model
-                    | board =
-                        model.board
-                            |> get 0
-                            |> Maybe.map (\line -> set x testUnit line)
-                            |> Maybe.map (\line -> set y line model.board)
-                            |> Maybe.withDefault model.board
-                  }
-                , Cmd.none
-                )
+            ( { model
+                | board = setOccupied x y model.board
+              }
+            , Cmd.none
+            )
 
         Tick _ ->
-            ( { model | board = emptyBoard }, newPoint )
+            ( { model | board = model.board }, newPoint )
 
 
 
@@ -140,7 +162,7 @@ renderUnit piece =
             svg [ width "20", height "20" ] [ rect [ height "20", width "20", fill "black" ] [] ]
 
         Just x ->
-            x
+            x.drawing
 
 
 collateLines : Array (Html Msg) -> Html Msg
