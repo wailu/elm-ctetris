@@ -143,10 +143,29 @@ update msg model =
             )
 
         Tick _ ->
-            ( { model | board = model.board }, newPoint )
+            let
+                eraseNonStill : Maybe Unit -> Maybe Unit
+                eraseNonStill smth =
+                    case smth of
+                        Just a ->
+                            if a.still then
+                                Just a
+
+                            else
+                                Nothing
+
+                        Nothing ->
+                            Nothing
+
+                stillBoard : Board
+                stillBoard =
+                    model.board |> map (\x -> map (\y -> eraseNonStill y) x)
+            in
+            ( { model | board = stillBoard }, newPoint )
 
 
 
+-- ( { model | board = model.board }, newPoint )
 -- View
 
 
