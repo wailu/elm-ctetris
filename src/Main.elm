@@ -87,7 +87,7 @@ type Tetromino
 type Msg
     = Tick Time.Posix
     | NewPoint ( Int, Int )
-    | Shift (List ( Int, Int ))
+    | Gravity (List ( Int, Int ))
 
 
 point : Random.Generator ( Int, Int )
@@ -100,15 +100,15 @@ newPoint =
     Random.generate NewPoint point
 
 
-setOccupied : Int -> Int -> Board -> Board
-setOccupied x y board =
+setOccupied : Int -> Int -> Bool -> Board -> Board
+setOccupied x y isStill board =
     let
         testUnit =
             { drawing =
                 svg
                     [ width "20", height "20" ]
                     [ rect [ height "20", width "20", fill "white" ] [] ]
-            , still = False
+            , still = isStill
             , xPosition = 0
             , yPosition = 4
             }
@@ -120,8 +120,8 @@ setOccupied x y board =
         |> Maybe.withDefault board
 
 
-draw : List ( Int, Int ) -> Board -> Board
-draw lst board =
+draw : List ( Int, Int ) -> Bool -> Board -> Board
+draw lst isStill board =
     let
         newLst =
             List.drop 1 lst
@@ -129,7 +129,7 @@ draw lst board =
         maybeHead =
             List.head lst
     in
-    maybeHead |> Maybe.map (\( x, y ) -> setOccupied x y board) |> Maybe.map (\nb -> draw newLst nb) |> Maybe.withDefault board
+    maybeHead |> Maybe.map (\( x, y ) -> setOccupied x y isStill board) |> Maybe.map (\nb -> draw newLst isStill nb) |> Maybe.withDefault board
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -141,7 +141,7 @@ update msg model =
                     [ ( -4, 5 ), ( -3, 5 ), ( -2, 5 ), ( -1, 5 ) ]
             in
             update
-                (Shift coordinates)
+                (Gravity coordinates)
                 { model | moving_piece = coordinates }
 
         Tick _ ->
@@ -163,14 +163,29 @@ update msg model =
                 stillBoard =
                     model.board |> map (\x -> map (\y -> eraseNonStill y) x)
             in
-            update (Shift model.moving_piece) { model | board = stillBoard }
+            update (Gravity model.moving_piece) { model | board = stillBoard }
 
-        Shift xs ->
+        Gravity xs ->
             let
-                newCoordinates =
-                    xs |> List.map (\( y, x ) -> ( y + 1, x ))
+                isStuck : Bool
+                isStuck =
+                    (model.moving_piece |> List.filter (\( y, x ) -> y < 19) |> List.length) /= 4
+
+                newBoard =
+                    if not isStuck then
+                        Debug.log "what" (xs |> List.map (\( y, x ) -> ( y + 1, x )) |> draw) False model.board
+
+                    else
+                        (xs |> draw) True model.board
+
+                movedCoordinates =
+                    if isStuck then
+                        []
+
+                    else
+                        xs |> List.map (\( y, x ) -> ( y + 1, x ))
             in
-            ( { model | board = draw newCoordinates model.board, moving_piece = newCoordinates }, Cmd.none )
+            ( { model | board = newBoard, moving_piece = movedCoordinates }, Cmd.none )
 
 
 
