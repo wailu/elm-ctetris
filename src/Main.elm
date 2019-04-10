@@ -94,11 +94,6 @@ type Msg
     | NewTetrominoPiece Tetromino
 
 
-point : Random.Generator ( Int, Int )
-point =
-    Random.pair (Random.int 0 19) (Random.int 0 9)
-
-
 tetromino : Random.Generator Tetromino
 tetromino =
     Random.uniform I [ O, T, S, Z, J, L ]
@@ -117,11 +112,6 @@ isPresent m =
 
         _ ->
             True
-
-
-newPoint : Cmd Msg
-newPoint =
-    Random.generate NewPoint point
 
 
 getUnit : Int -> Int -> Board -> Maybe Unit
