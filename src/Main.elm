@@ -33,7 +33,7 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every 200 Tick
+    Time.every 100 Tick
 
 
 
@@ -53,7 +53,7 @@ emptyBoard =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    update (NewPoint ( 1, 2 )) { board = emptyBoard, moving_piece = [] }
+    ( { board = emptyBoard, moving_piece = [] }, nextPiece )
 
 
 type alias Board =
@@ -91,11 +91,22 @@ type Msg
     = Tick Time.Posix
     | NewPoint ( Int, Int )
     | Gravity (List ( Int, Int ))
+    | NewTetrominoPiece Tetromino
 
 
 point : Random.Generator ( Int, Int )
 point =
     Random.pair (Random.int 0 19) (Random.int 0 9)
+
+
+tetromino : Random.Generator Tetromino
+tetromino =
+    Random.uniform I [ O, T, S, Z, J, L ]
+
+
+nextPiece : Cmd Msg
+nextPiece =
+    Random.generate NewTetrominoPiece tetromino
 
 
 isPresent : Maybe a -> Bool
@@ -158,6 +169,59 @@ draw lst isStill board =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        NewTetrominoPiece piece ->
+            case piece of
+                I ->
+                    let
+                        coordinates =
+                            [ ( -4, 5 ), ( -3, 5 ), ( -2, 5 ), ( -1, 5 ) ]
+                    in
+                    update
+                        (Gravity coordinates)
+                        { model | moving_piece = coordinates }
+
+                O ->
+                    let
+                        coordinates =
+                            [ ( -4, 5 ), ( -3, 5 ), ( -4, 6 ), ( -3, 6 ) ]
+                    in
+                    update (Gravity coordinates) { model | moving_piece = coordinates }
+
+                T ->
+                    let
+                        coordinates =
+                            [ ( -4, 4 ), ( -4, 5 ), ( -4, 6 ), ( -3, 5 ) ]
+                    in
+                    update (Gravity coordinates) { model | moving_piece = coordinates }
+
+                S ->
+                    let
+                        coordinates =
+                            [ ( -4, 5 ), ( -4, 6 ), ( -3, 6 ), ( -3, 7 ) ]
+                    in
+                    update (Gravity coordinates) { model | moving_piece = coordinates }
+
+                Z ->
+                    let
+                        coordinates =
+                            [ ( -3, 5 ), ( -3, 6 ), ( -4, 6 ), ( -4, 7 ) ]
+                    in
+                    update (Gravity coordinates) { model | moving_piece = coordinates }
+
+                J ->
+                    let
+                        coordinates =
+                            [ ( -3, 5 ), ( -4, 5 ), ( -4, 6 ), ( -4, 7 ) ]
+                    in
+                    update (Gravity coordinates) { model | moving_piece = coordinates }
+
+                L ->
+                    let
+                        coordinates =
+                            [ ( -4, 5 ), ( -4, 6 ), ( -4, 7 ), ( -3, 7 ) ]
+                    in
+                    update (Gravity coordinates) { model | moving_piece = coordinates }
+
         NewPoint ( x, y ) ->
             let
                 coordinates =
@@ -230,7 +294,7 @@ update msg model =
                         (getUnit 5 16 newBoard)
             in
             if List.isEmpty movedCoordinates then
-                update (NewPoint ( 1, 2 )) newModel
+                ( newModel, nextPiece )
 
             else
                 ( newModel, Cmd.none )
