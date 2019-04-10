@@ -12,6 +12,9 @@ import Time
 
 
 
+-- Issues
+-- model.moving_piece looks redundant
+-- it hangs when "game over" cause of the inifinite call to update
 -- Main
 
 
@@ -95,9 +98,27 @@ point =
     Random.pair (Random.int 0 19) (Random.int 0 9)
 
 
+isPresent : Maybe a -> Bool
+isPresent m =
+    case m of
+        Nothing ->
+            False
+
+        _ ->
+            True
+
+
 newPoint : Cmd Msg
 newPoint =
     Random.generate NewPoint point
+
+
+getUnit : Int -> Int -> Board -> Maybe Unit
+getUnit x y board =
+    board
+        |> get y
+        |> Maybe.map (\line -> Maybe.withDefault Nothing (get x line))
+        |> Maybe.withDefault Nothing
 
 
 setOccupied : Int -> Int -> Bool -> Board -> Board
@@ -109,6 +130,8 @@ setOccupied x y isStill board =
                     [ width "20", height "20" ]
                     [ rect [ height "20", width "20", fill "white" ] [] ]
             , still = isStill
+
+            -- these numbers mean nothing as of now, perhaps its time to remove them!
             , xPosition = 0
             , yPosition = 4
             }
@@ -145,6 +168,9 @@ update msg model =
                 { model | moving_piece = coordinates }
 
         Tick _ ->
+            update (Gravity model.moving_piece) model
+
+        Gravity xs ->
             let
                 eraseNonStill : Maybe Unit -> Maybe Unit
                 eraseNonStill smth =
@@ -162,24 +188,29 @@ update msg model =
                 stillBoard : Board
                 stillBoard =
                     model.board |> map (\x -> map (\y -> eraseNonStill y) x)
-            in
-            update (Gravity model.moving_piece) { model | board = stillBoard }
 
-        Gravity xs ->
-            let
-                isStuck : Bool
-                isStuck =
-                    (model.moving_piece |> List.filter (\( y, x ) -> y < 19) |> List.length) /= 4
+                possibleNextPos : List ( Int, Int )
+                possibleNextPos =
+                    xs |> List.map (\( y, x ) -> ( y + 1, x ))
+
+                reachBottom : Bool
+                reachBottom =
+                    (xs |> List.filter (\( y, x ) -> y < 19) |> List.length)
+                        /= 4
+
+                hitStuff : Bool
+                hitStuff =
+                    List.length (Debug.log "possible" (possibleNextPos |> List.filter (\( y, x ) -> not (isPresent (getUnit x y stillBoard))))) /= 4
 
                 newBoard =
-                    if not isStuck then
-                        Debug.log "what" (xs |> List.map (\( y, x ) -> ( y + 1, x )) |> draw) False model.board
+                    if not reachBottom && not hitStuff then
+                        Debug.log "what" (xs |> List.map (\( y, x ) -> ( y + 1, x )) |> draw) False stillBoard
 
                     else
-                        (xs |> draw) True model.board
+                        (xs |> draw) True stillBoard
 
                 movedCoordinates =
-                    if isStuck then
+                    if reachBottom || hitStuff then
                         []
 
                     else
@@ -188,6 +219,15 @@ update msg model =
                 newModel : Model
                 newModel =
                     { model | board = newBoard, moving_piece = movedCoordinates }
+
+                test =
+                    Debug.log "test"
+                        (getUnit 16 5 newBoard)
+
+                test2 =
+                    Debug.log
+                        "test2"
+                        (getUnit 5 16 newBoard)
             in
             if List.isEmpty movedCoordinates then
                 update (NewPoint ( 1, 2 )) newModel
