@@ -184,8 +184,16 @@ update msg model =
 
                     else
                         xs |> List.map (\( y, x ) -> ( y + 1, x ))
+
+                newModel : Model
+                newModel =
+                    { model | board = newBoard, moving_piece = movedCoordinates }
             in
-            ( { model | board = newBoard, moving_piece = movedCoordinates }, Cmd.none )
+            if List.isEmpty movedCoordinates then
+                update (NewPoint ( 1, 2 )) newModel
+
+            else
+                ( newModel, Cmd.none )
 
 
 
