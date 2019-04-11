@@ -126,7 +126,7 @@ type Msg
 tetromino : Random.Generator Tetromino
 tetromino =
     -- Random.uniform I [ O, T, S, Z, J, L ]
-    Random.uniform I []
+    Random.uniform I [ O ]
 
 
 nextPiece : Cmd Msg
@@ -194,6 +194,12 @@ hitStuff possibleNextPos stillBoard =
     List.length (possibleNextPos |> List.filter (\( y, x ) -> not (isPresent (getUnit x y stillBoard)))) /= 4
 
 
+reachBottom : List ( Int, Int ) -> Bool
+reachBottom xs =
+    (xs |> List.filter (\( y, x ) -> y < 19) |> List.length)
+        /= 4
+
+
 eraseNonStill : Maybe Unit -> Maybe Unit
 eraseNonStill smth =
     case smth of
@@ -213,22 +219,22 @@ getStillBoard board =
     board |> map (\x -> map (\y -> eraseNonStill y) x)
 
 
-
--- need to make sure that it doesn't cut into other pieces
-
-
 rotateI : List ( Int, Int ) -> List ( Int, Int )
 rotateI xs =
     let
-        ( ty, tx ) =
-            Maybe.withDefault ( 1, 1 ) (List.head xs)
+        isVertical : Bool
+        isVertical =
+            (List.head xs
+                |> Maybe.map (\( b, a ) -> List.filter (\( y, x ) -> x == a) xs)
+                |> Maybe.map List.length
+            )
+                |> Maybe.map (\x -> x /= 4)
+                |> Maybe.withDefault False
     in
-    if (List.filter (\( y, x ) -> x == tx) xs |> List.length) /= 4 then
-        -- vertical
+    if isVertical then
         (\list -> List.indexedMap (\n -> \( y, x ) -> ( y - n + 1, x + n - 1 )) list) xs
 
     else
-        -- horizonal
         (\list -> List.indexedMap (\n -> \( y, x ) -> ( y + n - 1, x - n + 1 )) list) xs
 
 
@@ -338,8 +344,15 @@ update msg model =
 
                         after =
                             Debug.log "after" (f coordinates)
+
+                        possibleNextPos =
+                            f coordinates
                     in
-                    ( { model | moving_piece = ( f coordinates, f ) }, Cmd.none )
+                    if hitStuff possibleNextPos (getStillBoard model.board) || reachBottom possibleNextPos then
+                        ( model, Cmd.none )
+
+                    else
+                        ( { model | moving_piece = ( f coordinates, f ) }, Cmd.none )
 
         Gravity ( xs, f ) ->
             let
@@ -347,20 +360,15 @@ update msg model =
                 possibleNextPos =
                     xs |> List.map (\( y, x ) -> ( y + 1, x ))
 
-                reachBottom : Bool
-                reachBottom =
-                    (xs |> List.filter (\( y, x ) -> y < 19) |> List.length)
-                        /= 4
-
                 newBoard =
-                    if not reachBottom && not (hitStuff possibleNextPos (getStillBoard model.board)) then
+                    if not (reachBottom xs) && not (hitStuff possibleNextPos (getStillBoard model.board)) then
                         Debug.log "what" (xs |> List.map (\( y, x ) -> ( y + 1, x )) |> draw) False (getStillBoard model.board)
 
                     else
                         (xs |> draw) True (getStillBoard model.board)
 
                 movedCoordinates =
-                    if reachBottom || hitStuff possibleNextPos (getStillBoard model.board) then
+                    if reachBottom xs || hitStuff possibleNextPos (getStillBoard model.board) then
                         []
 
                     else
