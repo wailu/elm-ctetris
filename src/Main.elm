@@ -126,7 +126,7 @@ type Msg
 tetromino : Random.Generator Tetromino
 tetromino =
     -- Random.uniform I [ O, T, S, Z, J, L ]
-    Random.uniform I [ O, T ]
+    Random.uniform L []
 
 
 nextPiece : Cmd Msg
@@ -272,6 +272,180 @@ rotateT xs =
         |> Maybe.withDefault []
 
 
+rotateZ : List ( Int, Int ) -> List ( Int, Int )
+rotateZ xs =
+    let
+        maybeHead =
+            List.head xs
+
+        maybeTail =
+            Maybe.Just (List.drop 2 xs)
+
+        list1 =
+            List.take 2 xs
+    in
+    Maybe.map2
+        (\( hy, hx ) ->
+            \list ->
+                List.map
+                    (\( ty, tx ) ->
+                        if ty > hy && tx > hx then
+                            ( ty - 2, tx )
+
+                        else if ty == hy && tx < hx then
+                            ( ty, tx + 2 )
+
+                        else if ty == hy && tx > hx then
+                            ( ty, tx - 2 )
+
+                        else
+                            ( ty + 2, tx )
+                    )
+                    (Maybe.withDefault [] maybeTail)
+        )
+        maybeHead
+        maybeTail
+        |> Maybe.map (\list2 -> List.append list1 list2)
+        |> Maybe.withDefault []
+
+
+rotateS : List ( Int, Int ) -> List ( Int, Int )
+rotateS xs =
+    let
+        maybeHead =
+            List.head xs
+
+        maybeTail =
+            Maybe.Just (List.drop 2 xs)
+
+        list1 =
+            List.take 2 xs
+    in
+    Maybe.map2
+        (\( hy, hx ) ->
+            \list ->
+                List.map
+                    (\( ty, tx ) ->
+                        if ty > hy && tx == hx then
+                            ( ty - 2, tx )
+
+                        else if ty > hy && tx < hx then
+                            ( ty, tx + 2 )
+
+                        else if ty < hy && tx == hx then
+                            ( ty + 2, tx )
+
+                        else
+                            ( ty, tx - 2 )
+                    )
+                    (Maybe.withDefault [] maybeTail)
+        )
+        maybeHead
+        maybeTail
+        |> Maybe.map (\list2 -> List.append list1 list2)
+        |> Maybe.withDefault []
+
+
+rotateJ : List ( Int, Int ) -> List ( Int, Int )
+rotateJ xs =
+    let
+        maybeHead =
+            List.head xs
+
+        maybeTail =
+            List.tail xs
+
+        isTopHalf : Bool
+        isTopHalf =
+            Maybe.map2 (\( y, x ) -> \list -> List.filter (\( b, a ) -> b < y) list) maybeHead maybeTail
+                |> Maybe.map (\list -> List.isEmpty list)
+                |> Maybe.withDefault False
+
+        isVertical : Bool
+        isVertical =
+            maybeTail
+                |> Maybe.map (\list -> List.head list)
+                |> Maybe.withDefault Nothing
+                |> Maybe.map (\( b, a ) -> List.filter (\( y, x ) -> x == a) xs)
+                |> Maybe.map List.length
+                |> Maybe.map (\x -> x == 3)
+                |> Maybe.withDefault False
+
+        madeHorizontal : Maybe (List ( Int, Int ))
+        madeHorizontal =
+            maybeTail |> Maybe.map (\list -> List.head list) |> Maybe.withDefault Nothing |> Maybe.map (\( y, x ) -> ( y, x ) :: ( y, x - 1 ) :: ( y, x + 1 ) :: [])
+
+        madeVertical : Maybe (List ( Int, Int ))
+        madeVertical =
+            maybeTail |> Maybe.map (\list -> List.head list) |> Maybe.withDefault Nothing |> Maybe.map (\( y, x ) -> ( y, x ) :: ( y - 1, x ) :: ( y + 1, x ) :: [])
+    in
+    if Debug.log "isVertical" isVertical && isTopHalf then
+        Maybe.map2 (\( y, x ) -> \list -> ( y, x + 2 ) :: list) maybeHead madeHorizontal
+            |> Maybe.withDefault []
+
+    else if isVertical then
+        Maybe.map2 (\( y, x ) -> \list -> ( y, x - 2 ) :: list) maybeHead madeHorizontal
+            |> Maybe.withDefault []
+
+    else if isTopHalf then
+        Maybe.map2 (\( y, x ) -> \list -> ( y + 2, x ) :: list) maybeHead madeVertical
+            |> Maybe.withDefault []
+
+    else
+        Maybe.map2 (\( y, x ) -> \list -> ( y - 2, x ) :: list) maybeHead madeVertical
+            |> Maybe.withDefault []
+
+
+rotateL : List ( Int, Int ) -> List ( Int, Int )
+rotateL xs =
+    let
+        maybeHead =
+            List.head xs
+
+        maybeTail =
+            List.tail xs
+
+        isTopHalf : Bool
+        isTopHalf =
+            Maybe.map2 (\( y, x ) -> \list -> List.filter (\( b, a ) -> b < y) list) maybeHead maybeTail
+                |> Maybe.map (\list -> List.isEmpty list)
+                |> Maybe.withDefault False
+
+        isVertical : Bool
+        isVertical =
+            maybeTail
+                |> Maybe.map (\list -> List.head list)
+                |> Maybe.withDefault Nothing
+                |> Maybe.map (\( b, a ) -> List.filter (\( y, x ) -> x == a) xs)
+                |> Maybe.map List.length
+                |> Maybe.map (\x -> x == 3)
+                |> Maybe.withDefault False
+
+        madeHorizontal : Maybe (List ( Int, Int ))
+        madeHorizontal =
+            maybeTail |> Maybe.map (\list -> List.head list) |> Maybe.withDefault Nothing |> Maybe.map (\( y, x ) -> ( y, x ) :: ( y, x - 1 ) :: ( y, x + 1 ) :: [])
+
+        madeVertical : Maybe (List ( Int, Int ))
+        madeVertical =
+            maybeTail |> Maybe.map (\list -> List.head list) |> Maybe.withDefault Nothing |> Maybe.map (\( y, x ) -> ( y, x ) :: ( y - 1, x ) :: ( y + 1, x ) :: [])
+    in
+    if Debug.log "isVertical" isVertical && isTopHalf then
+        Maybe.map2 (\( y, x ) -> \list -> ( y, x + 2 ) :: list) maybeHead madeHorizontal
+            |> Maybe.withDefault []
+
+    else if isVertical then
+        Maybe.map2 (\( y, x ) -> \list -> ( y, x - 2 ) :: list) maybeHead madeHorizontal
+            |> Maybe.withDefault []
+
+    else if isTopHalf then
+        Maybe.map2 (\( y, x ) -> \list -> ( y + 2, x ) :: list) maybeHead madeVertical
+            |> Maybe.withDefault []
+
+    else
+        Maybe.map2 (\( y, x ) -> \list -> ( y - 2, x ) :: list) maybeHead madeVertical
+            |> Maybe.withDefault []
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -303,31 +477,31 @@ update msg model =
                     , Cmd.none
                     )
 
-                S ->
-                    ( { model
-                        | moving_piece =
-                            ( [ ( -4, 5 ), ( -4, 6 ), ( -3, 6 ), ( -3, 7 ) ], \list -> list )
-                      }
-                    , Cmd.none
-                    )
-
                 Z ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -3, 5 ), ( -3, 6 ), ( -4, 6 ), ( -4, 7 ) ], \list -> list )
+                            ( [ ( -4, 6 ), ( -3, 6 ), ( -3, 7 ), ( -4, 5 ) ], rotateZ )
                       }
                     , Cmd.none
                     )
 
-                J ->
+                S ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -3, 5 ), ( -4, 5 ), ( -4, 6 ), ( -4, 7 ) ], \list -> list )
+                            ( [ ( -4, 6 ), ( -4, 7 ), ( -3, 6 ), ( -3, 5 ) ], rotateS )
                       }
                     , Cmd.none
                     )
 
                 L ->
+                    ( { model
+                        | moving_piece =
+                            ( [ ( -3, 5 ), ( -4, 6 ), ( -4, 5 ), ( -4, 7 ) ], rotateL )
+                      }
+                    , Cmd.none
+                    )
+
+                J ->
                     ( { model
                         | moving_piece =
                             ( [ ( -4, 5 ), ( -4, 6 ), ( -4, 7 ), ( -3, 7 ) ], \list -> list )
