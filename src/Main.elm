@@ -126,7 +126,7 @@ type Msg
 tetromino : Random.Generator Tetromino
 tetromino =
     -- Random.uniform I [ O, T, S, Z, J, L ]
-    Random.uniform L []
+    Random.uniform J []
 
 
 nextPiece : Cmd Msg
@@ -380,19 +380,19 @@ rotateJ xs =
             maybeTail |> Maybe.map (\list -> List.head list) |> Maybe.withDefault Nothing |> Maybe.map (\( y, x ) -> ( y, x ) :: ( y - 1, x ) :: ( y + 1, x ) :: [])
     in
     if Debug.log "isVertical" isVertical && isTopHalf then
-        Maybe.map2 (\( y, x ) -> \list -> ( y, x + 2 ) :: list) maybeHead madeHorizontal
+        Maybe.map2 (\( y, x ) -> \list -> ( y + 2, x ) :: list) maybeHead madeHorizontal
             |> Maybe.withDefault []
 
     else if isVertical then
-        Maybe.map2 (\( y, x ) -> \list -> ( y, x - 2 ) :: list) maybeHead madeHorizontal
+        Maybe.map2 (\( y, x ) -> \list -> ( y - 2, x ) :: list) maybeHead madeHorizontal
             |> Maybe.withDefault []
 
     else if isTopHalf then
-        Maybe.map2 (\( y, x ) -> \list -> ( y + 2, x ) :: list) maybeHead madeVertical
+        Maybe.map2 (\( y, x ) -> \list -> ( y, x + 2 ) :: list) maybeHead madeVertical
             |> Maybe.withDefault []
 
     else
-        Maybe.map2 (\( y, x ) -> \list -> ( y - 2, x ) :: list) maybeHead madeVertical
+        Maybe.map2 (\( y, x ) -> \list -> ( y, x - 2 ) :: list) maybeHead madeVertical
             |> Maybe.withDefault []
 
 
@@ -504,7 +504,7 @@ update msg model =
                 J ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -4, 5 ), ( -4, 6 ), ( -4, 7 ), ( -3, 7 ) ], \list -> list )
+                            ( [ ( -3, 7 ), ( -4, 6 ), ( -4, 5 ), ( -4, 7 ) ], rotateJ )
                       }
                     , Cmd.none
                     )
