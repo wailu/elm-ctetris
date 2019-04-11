@@ -18,7 +18,6 @@ import Time
 -- Issues
 {- model.moving_piece looks redundant
    it hangs when "game over" cause of the inifinite call to update
-   can "shift" into other blocks
    can go through walls
 -}
 -- Main
@@ -72,7 +71,7 @@ toControl string =
 
 type alias Model =
     { board : Board
-    , moving_piece : List ( Int, Int )
+    , moving_piece : ( List ( Int, Int ), List ( Int, Int ) -> List ( Int, Int ) )
     }
 
 
@@ -83,7 +82,7 @@ emptyBoard =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    ( { board = emptyBoard, moving_piece = [] }, nextPiece )
+    ( { board = emptyBoard, moving_piece = ( [], \x -> x ) }, nextPiece )
 
 
 type alias Board =
@@ -119,14 +118,15 @@ type Tetromino
 
 type Msg
     = Tick Time.Posix
-    | Gravity (List ( Int, Int ))
+    | Gravity ( List ( Int, Int ), List ( Int, Int ) -> List ( Int, Int ) )
     | NewTetrominoPiece Tetromino
     | Control Key
 
 
 tetromino : Random.Generator Tetromino
 tetromino =
-    Random.uniform I [ O, T, S, Z, J, L ]
+    -- Random.uniform I [ O, T, S, Z, J, L ]
+    Random.uniform I []
 
 
 nextPiece : Cmd Msg
@@ -189,6 +189,49 @@ draw lst isStill board =
         |> Maybe.withDefault board
 
 
+hitStuff : List ( Int, Int ) -> Board -> Bool
+hitStuff possibleNextPos stillBoard =
+    List.length (possibleNextPos |> List.filter (\( y, x ) -> not (isPresent (getUnit x y stillBoard)))) /= 4
+
+
+eraseNonStill : Maybe Unit -> Maybe Unit
+eraseNonStill smth =
+    case smth of
+        Just a ->
+            if a.still then
+                Just a
+
+            else
+                Nothing
+
+        Nothing ->
+            Nothing
+
+
+getStillBoard : Board -> Board
+getStillBoard board =
+    board |> map (\x -> map (\y -> eraseNonStill y) x)
+
+
+
+-- need to make sure that it doesn't cut into other pieces
+
+
+rotateI : List ( Int, Int ) -> List ( Int, Int )
+rotateI xs =
+    let
+        ( ty, tx ) =
+            Maybe.withDefault ( 1, 1 ) (List.head xs)
+    in
+    if (List.filter (\( y, x ) -> x == tx) xs |> List.length) /= 4 then
+        -- vertical
+        (\list -> List.indexedMap (\n -> \( y, x ) -> ( y - n + 1, x + n - 1 )) list) xs
+
+    else
+        -- horizonal
+        (\list -> List.indexedMap (\n -> \( y, x ) -> ( y + n - 1, x - n + 1 )) list) xs
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -197,7 +240,9 @@ update msg model =
                 I ->
                     ( { model
                         | moving_piece =
-                            [ ( -4, 5 ), ( -3, 5 ), ( -2, 5 ), ( -1, 5 ) ]
+                            ( [ ( -1, 5 ), ( -2, 5 ), ( -3, 5 ), ( -4, 5 ) ]
+                            , rotateI
+                            )
                       }
                     , Cmd.none
                     )
@@ -205,7 +250,7 @@ update msg model =
                 O ->
                     ( { model
                         | moving_piece =
-                            [ ( -4, 5 ), ( -3, 5 ), ( -4, 6 ), ( -3, 6 ) ]
+                            ( [ ( -4, 5 ), ( -3, 5 ), ( -4, 6 ), ( -3, 6 ) ], \list -> list )
                       }
                     , Cmd.none
                     )
@@ -213,7 +258,7 @@ update msg model =
                 T ->
                     ( { model
                         | moving_piece =
-                            [ ( -4, 4 ), ( -4, 5 ), ( -4, 6 ), ( -3, 5 ) ]
+                            ( [ ( -4, 4 ), ( -4, 5 ), ( -4, 6 ), ( -3, 5 ) ], \list -> list )
                       }
                     , Cmd.none
                     )
@@ -221,7 +266,7 @@ update msg model =
                 S ->
                     ( { model
                         | moving_piece =
-                            [ ( -4, 5 ), ( -4, 6 ), ( -3, 6 ), ( -3, 7 ) ]
+                            ( [ ( -4, 5 ), ( -4, 6 ), ( -3, 6 ), ( -3, 7 ) ], \list -> list )
                       }
                     , Cmd.none
                     )
@@ -229,7 +274,7 @@ update msg model =
                 Z ->
                     ( { model
                         | moving_piece =
-                            [ ( -3, 5 ), ( -3, 6 ), ( -4, 6 ), ( -4, 7 ) ]
+                            ( [ ( -3, 5 ), ( -3, 6 ), ( -4, 6 ), ( -4, 7 ) ], \list -> list )
                       }
                     , Cmd.none
                     )
@@ -237,7 +282,7 @@ update msg model =
                 J ->
                     ( { model
                         | moving_piece =
-                            [ ( -3, 5 ), ( -4, 5 ), ( -4, 6 ), ( -4, 7 ) ]
+                            ( [ ( -3, 5 ), ( -4, 5 ), ( -4, 6 ), ( -4, 7 ) ], \list -> list )
                       }
                     , Cmd.none
                     )
@@ -245,7 +290,7 @@ update msg model =
                 L ->
                     ( { model
                         | moving_piece =
-                            [ ( -4, 5 ), ( -4, 6 ), ( -4, 7 ), ( -3, 7 ) ]
+                            ( [ ( -4, 5 ), ( -4, 6 ), ( -4, 7 ), ( -3, 7 ) ], \list -> list )
                       }
                     , Cmd.none
                     )
@@ -256,33 +301,48 @@ update msg model =
         Control key ->
             case key of
                 Right ->
-                    ( { model | moving_piece = List.map (\( y, x ) -> ( y, x + 1 )) model.moving_piece }, Cmd.none )
+                    let
+                        ( coordinates, f ) =
+                            model.moving_piece
+
+                        possibleNextPos =
+                            List.map (\( y, x ) -> ( y, x + 1 )) coordinates
+                    in
+                    if hitStuff possibleNextPos (getStillBoard model.board) then
+                        ( model, Cmd.none )
+
+                    else
+                        ( { model | moving_piece = ( possibleNextPos, f ) }, Cmd.none )
 
                 Left ->
-                    ( { model | moving_piece = List.map (\( y, x ) -> ( y, x - 1 )) model.moving_piece }, Cmd.none )
+                    let
+                        ( coordinates, f ) =
+                            model.moving_piece
+
+                        possibleNextPos =
+                            List.map (\( y, x ) -> ( y, x - 1 )) coordinates
+                    in
+                    if hitStuff possibleNextPos (getStillBoard model.board) then
+                        ( model, Cmd.none )
+
+                    else
+                        ( { model | moving_piece = ( possibleNextPos, f ) }, Cmd.none )
 
                 Other ->
-                    ( model, Cmd.none )
+                    let
+                        ( coordinates, f ) =
+                            model.moving_piece
 
-        Gravity xs ->
+                        original =
+                            Debug.log "original" coordinates
+
+                        after =
+                            Debug.log "after" (f coordinates)
+                    in
+                    ( { model | moving_piece = ( f coordinates, f ) }, Cmd.none )
+
+        Gravity ( xs, f ) ->
             let
-                eraseNonStill : Maybe Unit -> Maybe Unit
-                eraseNonStill smth =
-                    case smth of
-                        Just a ->
-                            if a.still then
-                                Just a
-
-                            else
-                                Nothing
-
-                        Nothing ->
-                            Nothing
-
-                stillBoard : Board
-                stillBoard =
-                    model.board |> map (\x -> map (\y -> eraseNonStill y) x)
-
                 possibleNextPos : List ( Int, Int )
                 possibleNextPos =
                     xs |> List.map (\( y, x ) -> ( y + 1, x ))
@@ -292,19 +352,15 @@ update msg model =
                     (xs |> List.filter (\( y, x ) -> y < 19) |> List.length)
                         /= 4
 
-                hitStuff : Bool
-                hitStuff =
-                    List.length (possibleNextPos |> List.filter (\( y, x ) -> not (isPresent (getUnit x y stillBoard)))) /= 4
-
                 newBoard =
-                    if not reachBottom && not hitStuff then
-                        Debug.log "what" (xs |> List.map (\( y, x ) -> ( y + 1, x )) |> draw) False stillBoard
+                    if not reachBottom && not (hitStuff possibleNextPos (getStillBoard model.board)) then
+                        Debug.log "what" (xs |> List.map (\( y, x ) -> ( y + 1, x )) |> draw) False (getStillBoard model.board)
 
                     else
-                        (xs |> draw) True stillBoard
+                        (xs |> draw) True (getStillBoard model.board)
 
                 movedCoordinates =
-                    if reachBottom || hitStuff then
+                    if reachBottom || hitStuff possibleNextPos (getStillBoard model.board) then
                         []
 
                     else
@@ -312,16 +368,7 @@ update msg model =
 
                 newModel : Model
                 newModel =
-                    { model | board = newBoard, moving_piece = movedCoordinates }
-
-                test =
-                    Debug.log "test"
-                        (getUnit 16 5 newBoard)
-
-                test2 =
-                    Debug.log
-                        "test2"
-                        (getUnit 5 16 newBoard)
+                    { model | board = newBoard, moving_piece = ( movedCoordinates, f ) }
             in
             if List.isEmpty movedCoordinates then
                 ( newModel, nextPiece )
