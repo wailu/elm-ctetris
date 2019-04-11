@@ -126,7 +126,7 @@ type Msg
 tetromino : Random.Generator Tetromino
 tetromino =
     -- Random.uniform I [ O, T, S, Z, J, L ]
-    Random.uniform I [ O ]
+    Random.uniform I [ O, T ]
 
 
 nextPiece : Cmd Msg
@@ -238,6 +238,40 @@ rotateI xs =
         (\list -> List.indexedMap (\n -> \( y, x ) -> ( y + n - 1, x - n + 1 )) list) xs
 
 
+rotateT : List ( Int, Int ) -> List ( Int, Int )
+rotateT xs =
+    let
+        maybeHead =
+            Debug.log "originalllllllllhead" (List.head xs)
+
+        maybeTail =
+            Debug.log "originalllllllllltail" (List.tail xs)
+    in
+    Maybe.map2
+        (\( hy, hx ) ->
+            \list ->
+                List.map
+                    (\( ty, tx ) ->
+                        if ty > hy && tx == hx then
+                            ( ty - 1, tx - 1 )
+
+                        else if ty == hy && tx < hx then
+                            ( ty - 1, tx + 1 )
+
+                        else if ty < hy && tx == hx then
+                            ( ty + 1, tx + 1 )
+
+                        else
+                            ( ty + 1, tx - 1 )
+                    )
+                    (Maybe.withDefault [] maybeTail)
+        )
+        maybeHead
+        maybeTail
+        |> Maybe.map2 (\head -> \tail -> head :: tail) maybeHead
+        |> Maybe.withDefault []
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
@@ -264,7 +298,7 @@ update msg model =
                 T ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -4, 4 ), ( -4, 5 ), ( -4, 6 ), ( -3, 5 ) ], \list -> list )
+                            ( [ ( -4, 5 ), ( -4, 6 ), ( -4, 4 ), ( -3, 5 ) ], rotateT )
                       }
                     , Cmd.none
                     )
