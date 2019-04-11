@@ -18,6 +18,8 @@ import Time
 -- Issues
 {- model.moving_piece looks redundant
    it hangs when "game over" cause of the inifinite call to update
+   can "shift" into other blocks
+   can go through walls
 -}
 -- Main
 
@@ -193,55 +195,60 @@ update msg model =
         NewTetrominoPiece piece ->
             case piece of
                 I ->
-                    let
-                        coordinates =
+                    ( { model
+                        | moving_piece =
                             [ ( -4, 5 ), ( -3, 5 ), ( -2, 5 ), ( -1, 5 ) ]
-                    in
-                    update
-                        (Gravity coordinates)
-                        { model | moving_piece = coordinates }
+                      }
+                    , Cmd.none
+                    )
 
                 O ->
-                    let
-                        coordinates =
+                    ( { model
+                        | moving_piece =
                             [ ( -4, 5 ), ( -3, 5 ), ( -4, 6 ), ( -3, 6 ) ]
-                    in
-                    update (Gravity coordinates) { model | moving_piece = coordinates }
+                      }
+                    , Cmd.none
+                    )
 
                 T ->
-                    let
-                        coordinates =
+                    ( { model
+                        | moving_piece =
                             [ ( -4, 4 ), ( -4, 5 ), ( -4, 6 ), ( -3, 5 ) ]
-                    in
-                    update (Gravity coordinates) { model | moving_piece = coordinates }
+                      }
+                    , Cmd.none
+                    )
 
                 S ->
-                    let
-                        coordinates =
+                    ( { model
+                        | moving_piece =
                             [ ( -4, 5 ), ( -4, 6 ), ( -3, 6 ), ( -3, 7 ) ]
-                    in
-                    update (Gravity coordinates) { model | moving_piece = coordinates }
+                      }
+                    , Cmd.none
+                    )
 
                 Z ->
-                    let
-                        coordinates =
+                    ( { model
+                        | moving_piece =
                             [ ( -3, 5 ), ( -3, 6 ), ( -4, 6 ), ( -4, 7 ) ]
-                    in
-                    update (Gravity coordinates) { model | moving_piece = coordinates }
+                      }
+                    , Cmd.none
+                    )
 
                 J ->
-                    let
-                        coordinates =
+                    ( { model
+                        | moving_piece =
                             [ ( -3, 5 ), ( -4, 5 ), ( -4, 6 ), ( -4, 7 ) ]
-                    in
-                    update (Gravity coordinates) { model | moving_piece = coordinates }
+                      }
+                    , Cmd.none
+                    )
 
                 L ->
-                    let
-                        coordinates =
+                    ( { model
+                        | moving_piece =
                             [ ( -4, 5 ), ( -4, 6 ), ( -4, 7 ), ( -3, 7 ) ]
-                    in
-                    update (Gravity coordinates) { model | moving_piece = coordinates }
+                      }
+                    , Cmd.none
+                    )
 
         Tick _ ->
             update (Gravity model.moving_piece) model
