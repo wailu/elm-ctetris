@@ -2,8 +2,11 @@ module Main exposing (Model)
 
 import Array exposing (..)
 import Browser
+import Browser.Events as Events
 import Html exposing (Html, div, h1, span, td)
 import Html.Attributes exposing (style)
+import Json.Decode as Decode
+import Platform.Sub as Sub
 import Random
 import Svg exposing (Svg, rect, svg)
 import Svg.Attributes exposing (fill, height, width)
@@ -13,8 +16,9 @@ import Time
 
 
 -- Issues
--- model.moving_piece looks redundant
--- it hangs when "game over" cause of the inifinite call to update
+{- model.moving_piece looks redundant
+   it hangs when "game over" cause of the inifinite call to update
+-}
 -- Main
 
 
@@ -33,11 +37,35 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every 100 Tick
+    Sub.batch [ Time.every 100 Tick, Events.onKeyDown keyDecoder ]
 
 
 
 -- Model
+
+
+keyDecoder : Decode.Decoder Msg
+keyDecoder =
+    Decode.map toControl (Decode.field "key" Decode.string)
+
+
+type Key
+    = Left
+    | Right
+    | Other
+
+
+toControl : String -> Msg
+toControl string =
+    case string of
+        "ArrowLeft" ->
+            Control Left
+
+        "ArrowRight" ->
+            Control Right
+
+        _ ->
+            Control Other
 
 
 type alias Model =
@@ -89,9 +117,9 @@ type Tetromino
 
 type Msg
     = Tick Time.Posix
-    | NewPoint ( Int, Int )
     | Gravity (List ( Int, Int ))
     | NewTetrominoPiece Tetromino
+    | Control Key
 
 
 tetromino : Random.Generator Tetromino
@@ -153,7 +181,10 @@ draw lst isStill board =
         maybeHead =
             List.head lst
     in
-    maybeHead |> Maybe.map (\( x, y ) -> setOccupied x y isStill board) |> Maybe.map (\nb -> draw newLst isStill nb) |> Maybe.withDefault board
+    maybeHead
+        |> Maybe.map (\( x, y ) -> setOccupied x y isStill board)
+        |> Maybe.map (\nb -> draw newLst isStill nb)
+        |> Maybe.withDefault board
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -212,17 +243,19 @@ update msg model =
                     in
                     update (Gravity coordinates) { model | moving_piece = coordinates }
 
-        NewPoint ( x, y ) ->
-            let
-                coordinates =
-                    [ ( -4, 5 ), ( -3, 5 ), ( -2, 5 ), ( -1, 5 ) ]
-            in
-            update
-                (Gravity coordinates)
-                { model | moving_piece = coordinates }
-
         Tick _ ->
             update (Gravity model.moving_piece) model
+
+        Control key ->
+            case key of
+                Right ->
+                    ( { model | moving_piece = List.map (\( y, x ) -> ( y, x + 1 )) model.moving_piece }, Cmd.none )
+
+                Left ->
+                    ( { model | moving_piece = List.map (\( y, x ) -> ( y, x - 1 )) model.moving_piece }, Cmd.none )
+
+                Other ->
+                    ( model, Cmd.none )
 
         Gravity xs ->
             let
@@ -254,7 +287,7 @@ update msg model =
 
                 hitStuff : Bool
                 hitStuff =
-                    List.length (Debug.log "possible" (possibleNextPos |> List.filter (\( y, x ) -> not (isPresent (getUnit x y stillBoard))))) /= 4
+                    List.length (possibleNextPos |> List.filter (\( y, x ) -> not (isPresent (getUnit x y stillBoard)))) /= 4
 
                 newBoard =
                     if not reachBottom && not hitStuff then
