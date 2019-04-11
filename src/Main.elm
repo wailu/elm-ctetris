@@ -19,6 +19,7 @@ import Time
 {- model.moving_piece looks redundant
    it hangs when "game over" cause of the inifinite call to update
    can go through walls
+   at slow tick rate key presses lags
 -}
 -- Main
 
@@ -125,8 +126,7 @@ type Msg
 
 tetromino : Random.Generator Tetromino
 tetromino =
-    -- Random.uniform I [ O, T, S, Z, J, L ]
-    Random.uniform J []
+    Random.uniform I [ O, T, S, Z, J, L ]
 
 
 nextPiece : Cmd Msg
@@ -568,15 +568,18 @@ update msg model =
                 possibleNextPos =
                     xs |> List.map (\( y, x ) -> ( y + 1, x ))
 
+                stillBoard =
+                    getStillBoard model.board
+
                 newBoard =
-                    if not (reachBottom xs) && not (hitStuff possibleNextPos (getStillBoard model.board)) then
-                        Debug.log "what" (xs |> List.map (\( y, x ) -> ( y + 1, x )) |> draw) False (getStillBoard model.board)
+                    if not (reachBottom xs) && not (hitStuff possibleNextPos stillBoard) then
+                        Debug.log "what" (xs |> List.map (\( y, x ) -> ( y + 1, x )) |> draw) False stillBoard
 
                     else
-                        (xs |> draw) True (getStillBoard model.board)
+                        (xs |> draw) True stillBoard
 
                 movedCoordinates =
-                    if reachBottom xs || hitStuff possibleNextPos (getStillBoard model.board) then
+                    if reachBottom xs || hitStuff possibleNextPos stillBoard then
                         []
 
                     else
