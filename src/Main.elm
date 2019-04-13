@@ -219,6 +219,23 @@ getStillBoard board =
     board |> map (\x -> map (\y -> eraseNonStill y) x)
 
 
+clearLine : Board -> Board
+clearLine board =
+    let
+        lineFull : Array (Maybe Unit) -> Bool
+        lineFull arr =
+            Debug.log "length" (filter (\sq -> isPresent sq) arr |> length) == 10
+
+        clear =
+            board |> filter (\line -> not (lineFull line))
+
+        clearedLines : Int
+        clearedLines =
+            Debug.log "clearedlines" (20 - length clear)
+    in
+    append (initialize clearedLines (\_ -> initialize 10 (\_ -> Nothing))) clear
+
+
 rotateI : List ( Int, Int ) -> List ( Int, Int )
 rotateI xs =
     let
@@ -590,7 +607,7 @@ update msg model =
                     { model | board = newBoard, moving_piece = ( movedCoordinates, f ) }
             in
             if List.isEmpty movedCoordinates then
-                ( newModel, nextPiece )
+                ( { newModel | board = clearLine newBoard }, nextPiece )
 
             else
                 ( newModel, Cmd.none )
