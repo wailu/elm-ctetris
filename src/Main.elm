@@ -159,7 +159,7 @@ setOccupied x y isStill board =
             { drawing =
                 svg
                     [ width "20", height "20" ]
-                    [ rect [ height "20", width "20", fill "white" ] [] ]
+                    [ rect [ height "19", width "19", fill "pink" ] [] ]
             , still = isStill
 
             -- these numbers mean nothing as of now, perhaps its time to remove them!
