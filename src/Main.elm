@@ -97,8 +97,6 @@ type alias Line =
 type alias Unit =
     { drawing : Svg Msg
     , still : Bool
-    , xPosition : Int
-    , yPosition : Int
     }
 
 
@@ -161,10 +159,6 @@ setOccupied x y isStill board =
                     [ width "20", height "20" ]
                     [ rect [ height "19", width "19", fill "pink" ] [] ]
             , still = isStill
-
-            -- these numbers mean nothing as of now, perhaps its time to remove them!
-            , xPosition = 0
-            , yPosition = 4
             }
     in
     board
