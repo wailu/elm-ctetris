@@ -3,7 +3,7 @@ module Main exposing (Model)
 import Array exposing (..)
 import Browser
 import Browser.Events as Events
-import Html exposing (Html, div, h1, span, td)
+import Html exposing (Html, div)
 import Html.Attributes exposing (style)
 import Json.Decode as Decode
 import Platform.Sub as Sub
