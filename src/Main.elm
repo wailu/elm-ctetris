@@ -193,7 +193,7 @@ getUnit x y board =
 setOccupied : Int -> Int -> Bool -> Board -> Board
 setOccupied x y isStill board =
     let
-        testUnit =
+        sq =
             { drawing =
                 svg
                     [ width "20", height "20" ]
@@ -203,7 +203,7 @@ setOccupied x y isStill board =
     in
     board
         |> get x
-        |> Maybe.map (\row -> set y (Just testUnit) row)
+        |> Maybe.map (\row -> set y (Just sq) row)
         |> Maybe.map (\col -> set x col board)
         |> Maybe.withDefault board
 
