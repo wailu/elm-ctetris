@@ -47,6 +47,45 @@ subscriptions model =
 -- Model
 
 
+type Tetromino
+    = I Coordinates
+    | O Coordinates
+    | T Coordinates
+    | S Coordinates
+    | Z Coordinates
+    | J Coordinates
+    | L Coordinates
+
+
+initialTetrominoI : Tetromino
+initialTetrominoI =
+    I [ ( 0, 0 ) ]
+
+
+initialTetrominoO =
+    O [ ( 0, 0 ) ]
+
+
+initialTetrominoT =
+    T [ ( 0, 0 ) ]
+
+
+initialTetrominoS =
+    S [ ( 0, 0 ) ]
+
+
+initialTetrominoZ =
+    Z [ ( 0, 0 ) ]
+
+
+initialTetrominoJ =
+    J [ ( 0, 0 ) ]
+
+
+initialTetrominoL =
+    L [ ( 0, 0 ) ]
+
+
 keyDecoder : Decode.Decoder Msg
 keyDecoder =
     Decode.map toControl (Decode.field "key" Decode.string)
@@ -69,6 +108,10 @@ toControl string =
 
         _ ->
             Control Other
+
+
+type alias Coordinates =
+    List ( Int, Int )
 
 
 type alias Model =
@@ -101,16 +144,6 @@ type alias Unit =
     }
 
 
-type Tetromino
-    = I
-    | O
-    | T
-    | S
-    | Z
-    | J
-    | L
-
-
 
 -- Update
 -- Add a Shift Msg
@@ -125,7 +158,14 @@ type Msg
 
 tetromino : Random.Generator Tetromino
 tetromino =
-    Random.uniform I [ O, T, S, Z, J, L ]
+    Random.uniform initialTetrominoI
+        [ initialTetrominoO
+        , initialTetrominoT
+        , initialTetrominoS
+        , initialTetrominoZ
+        , initialTetrominoJ
+        , initialTetrominoL
+        ]
 
 
 nextPiece : Cmd Msg
@@ -236,60 +276,79 @@ update msg model =
     case msg of
         NewTetrominoPiece piece ->
             case piece of
-                I ->
+                I coordinates ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -1, 5 ), ( -2, 5 ), ( -3, 5 ), ( -4, 5 ) ]
+                            -- ( [ ( -1, 5 ), ( -2, 5 ), ( -3, 5 ), ( -4, 5 ) ]
+                            ( coordinates
                             , rotateI
                             )
                       }
                     , Cmd.none
                     )
 
-                O ->
+                O coordinates ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -4, 5 ), ( -3, 5 ), ( -4, 6 ), ( -3, 6 ) ], \list -> list )
+                            -- ( [ ( -4, 5 ), ( -3, 5 ), ( -4, 6 ), ( -3, 6 ) ]
+                            ( coordinates
+                            , \list -> list
+                            )
                       }
                     , Cmd.none
                     )
 
-                T ->
+                T coordinates ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -4, 5 ), ( -4, 6 ), ( -4, 4 ), ( -3, 5 ) ], rotateT )
+                            -- ( [ ( -4, 5 ), ( -4, 6 ), ( -4, 4 ), ( -3, 5 ) ]
+                            ( coordinates
+                            , rotateT
+                            )
                       }
                     , Cmd.none
                     )
 
-                Z ->
+                Z coordinates ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -4, 6 ), ( -3, 6 ), ( -3, 7 ), ( -4, 5 ) ], rotateZ )
+                            -- ( [ ( -4, 6 ), ( -3, 6 ), ( -3, 7 ), ( -4, 5 ) ]
+                            ( coordinates
+                            , rotateZ
+                            )
                       }
                     , Cmd.none
                     )
 
-                S ->
+                S coordinates ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -4, 6 ), ( -4, 7 ), ( -3, 6 ), ( -3, 5 ) ], rotateS )
+                            -- ( [ ( -4, 6 ), ( -4, 7 ), ( -3, 6 ), ( -3, 5 ) ]
+                            ( coordinates
+                            , rotateS
+                            )
                       }
                     , Cmd.none
                     )
 
-                L ->
+                L coordinates ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -3, 5 ), ( -4, 6 ), ( -4, 5 ), ( -4, 7 ) ], rotateL )
+                            -- ( [ ( -3, 5 ), ( -4, 6 ), ( -4, 5 ), ( -4, 7 ) ]
+                            ( coordinates
+                            , rotateL
+                            )
                       }
                     , Cmd.none
                     )
 
-                J ->
+                J coordinates ->
                     ( { model
                         | moving_piece =
-                            ( [ ( -3, 7 ), ( -4, 6 ), ( -4, 5 ), ( -4, 7 ) ], rotateJ )
+                            -- ( [ ( -3, 7 ), ( -4, 6 ), ( -4, 5 ), ( -4, 7 ) ]
+                            ( coordinates
+                            , rotateJ
+                            )
                       }
                     , Cmd.none
                     )
