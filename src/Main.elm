@@ -40,7 +40,10 @@ main =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch [ Time.every 100 Tick, Events.onKeyDown keyDecoder ]
+    Sub.batch
+        [ Time.every 100 Tick
+        , Events.onKeyDown keyDecoder
+        ]
 
 
 
@@ -145,7 +148,7 @@ type alias Unit =
 
 type Msg
     = Tick Time.Posix
-    | Gravity ( List ( Int, Int ), List ( Int, Int ) -> List ( Int, Int ) )
+    | Gravity ( Coordinates, Coordinates -> Coordinates )
     | NewTetrominoPiece Tetromino
     | Left
     | Right
