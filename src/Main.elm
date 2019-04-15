@@ -59,31 +59,31 @@ type Tetromino
 
 initialTetrominoI : Tetromino
 initialTetrominoI =
-    I [ ( 0, 0 ) ]
+    I [ ( -1, 5 ), ( -2, 5 ), ( -3, 5 ), ( -4, 5 ) ]
 
 
 initialTetrominoO =
-    O [ ( 0, 0 ) ]
+    O [ ( -4, 5 ), ( -3, 5 ), ( -4, 6 ), ( -3, 6 ) ]
 
 
 initialTetrominoT =
-    T [ ( 0, 0 ) ]
+    T [ ( -4, 5 ), ( -4, 6 ), ( -4, 4 ), ( -3, 5 ) ]
 
 
 initialTetrominoS =
-    S [ ( 0, 0 ) ]
+    S [ ( -4, 6 ), ( -4, 7 ), ( -3, 6 ), ( -3, 5 ) ]
 
 
 initialTetrominoZ =
-    Z [ ( 0, 0 ) ]
+    Z [ ( -4, 6 ), ( -3, 6 ), ( -3, 7 ), ( -4, 5 ) ]
 
 
 initialTetrominoJ =
-    J [ ( 0, 0 ) ]
+    J [ ( -3, 7 ), ( -4, 6 ), ( -4, 5 ), ( -4, 7 ) ]
 
 
 initialTetrominoL =
-    L [ ( 0, 0 ) ]
+    L [ ( -3, 5 ), ( -4, 6 ), ( -4, 5 ), ( -4, 7 ) ]
 
 
 keyDecoder : Decode.Decoder Msg
@@ -279,7 +279,6 @@ update msg model =
                 I coordinates ->
                     ( { model
                         | moving_piece =
-                            -- ( [ ( -1, 5 ), ( -2, 5 ), ( -3, 5 ), ( -4, 5 ) ]
                             ( coordinates
                             , rotateI
                             )
@@ -290,8 +289,8 @@ update msg model =
                 O coordinates ->
                     ( { model
                         | moving_piece =
-                            -- ( [ ( -4, 5 ), ( -3, 5 ), ( -4, 6 ), ( -3, 6 ) ]
                             ( coordinates
+                              -- the O piece cannot rotate
                             , \list -> list
                             )
                       }
@@ -301,7 +300,6 @@ update msg model =
                 T coordinates ->
                     ( { model
                         | moving_piece =
-                            -- ( [ ( -4, 5 ), ( -4, 6 ), ( -4, 4 ), ( -3, 5 ) ]
                             ( coordinates
                             , rotateT
                             )
@@ -312,7 +310,6 @@ update msg model =
                 Z coordinates ->
                     ( { model
                         | moving_piece =
-                            -- ( [ ( -4, 6 ), ( -3, 6 ), ( -3, 7 ), ( -4, 5 ) ]
                             ( coordinates
                             , rotateZ
                             )
@@ -323,7 +320,6 @@ update msg model =
                 S coordinates ->
                     ( { model
                         | moving_piece =
-                            -- ( [ ( -4, 6 ), ( -4, 7 ), ( -3, 6 ), ( -3, 5 ) ]
                             ( coordinates
                             , rotateS
                             )
@@ -334,7 +330,6 @@ update msg model =
                 L coordinates ->
                     ( { model
                         | moving_piece =
-                            -- ( [ ( -3, 5 ), ( -4, 6 ), ( -4, 5 ), ( -4, 7 ) ]
                             ( coordinates
                             , rotateL
                             )
@@ -345,7 +340,6 @@ update msg model =
                 J coordinates ->
                     ( { model
                         | moving_piece =
-                            -- ( [ ( -3, 7 ), ( -4, 6 ), ( -4, 5 ), ( -4, 7 ) ]
                             ( coordinates
                             , rotateJ
                             )
