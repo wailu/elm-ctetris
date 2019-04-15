@@ -186,7 +186,7 @@ getUnit : Int -> Int -> Board -> Maybe Unit
 getUnit x y board =
     board
         |> get y
-        |> Maybe.map (\line -> Maybe.withDefault Nothing (get x line))
+        |> Maybe.andThen (\line -> get x line)
         |> Maybe.withDefault Nothing
 
 
