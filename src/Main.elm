@@ -88,26 +88,20 @@ initialTetrominoL =
 
 keyDecoder : Decode.Decoder Msg
 keyDecoder =
-    Decode.map toControl (Decode.field "key" Decode.string)
+    Decode.map toKey (Decode.field "key" Decode.string)
 
 
-type Key
-    = Left
-    | Right
-    | Other
-
-
-toControl : String -> Msg
-toControl string =
+toKey : String -> Msg
+toKey string =
     case string of
         "ArrowLeft" ->
-            Control Left
+            Left
 
         "ArrowRight" ->
-            Control Right
+            Right
 
         _ ->
-            Control Other
+            Other
 
 
 type alias Coordinates =
@@ -153,7 +147,9 @@ type Msg
     = Tick Time.Posix
     | Gravity ( List ( Int, Int ), List ( Int, Int ) -> List ( Int, Int ) )
     | NewTetrominoPiece Tetromino
-    | Control Key
+    | Left
+    | Right
+    | Other
 
 
 tetromino : Random.Generator Tetromino
@@ -356,59 +352,57 @@ update msg model =
         Tick _ ->
             update (Gravity model.moving_piece) model
 
-        Control key ->
-            case key of
-                Right ->
-                    let
-                        ( coordinates, f ) =
-                            model.moving_piece
+        Right ->
+            let
+                ( coordinates, f ) =
+                    model.moving_piece
 
-                        possibleNextPos =
-                            List.map (\( y, x ) -> ( y, x + 1 )) coordinates
-                    in
-                    if
-                        hitStuff possibleNextPos (getStillBoard model.board)
-                            || reachWalls possibleNextPos
-                    then
-                        ( model, Cmd.none )
+                possibleNextPos =
+                    List.map (\( y, x ) -> ( y, x + 1 )) coordinates
+            in
+            if
+                hitStuff possibleNextPos (getStillBoard model.board)
+                    || reachWalls possibleNextPos
+            then
+                ( model, Cmd.none )
 
-                    else
-                        ( { model | moving_piece = ( possibleNextPos, f ) }, Cmd.none )
+            else
+                ( { model | moving_piece = ( possibleNextPos, f ) }, Cmd.none )
 
-                Left ->
-                    let
-                        ( coordinates, f ) =
-                            model.moving_piece
+        Left ->
+            let
+                ( coordinates, f ) =
+                    model.moving_piece
 
-                        possibleNextPos =
-                            List.map (\( y, x ) -> ( y, x - 1 )) coordinates
-                    in
-                    if hitStuff possibleNextPos (getStillBoard model.board) || reachWalls possibleNextPos then
-                        ( model, Cmd.none )
+                possibleNextPos =
+                    List.map (\( y, x ) -> ( y, x - 1 )) coordinates
+            in
+            if hitStuff possibleNextPos (getStillBoard model.board) || reachWalls possibleNextPos then
+                ( model, Cmd.none )
 
-                    else
-                        ( { model | moving_piece = ( possibleNextPos, f ) }, Cmd.none )
+            else
+                ( { model | moving_piece = ( possibleNextPos, f ) }, Cmd.none )
 
-                Other ->
-                    let
-                        ( coordinates, f ) =
-                            model.moving_piece
+        Other ->
+            let
+                ( coordinates, f ) =
+                    model.moving_piece
 
-                        original =
-                            coordinates
+                original =
+                    coordinates
 
-                        possibleNextPos =
-                            f coordinates
-                    in
-                    if
-                        hitStuff possibleNextPos (getStillBoard model.board)
-                            || reachBottom possibleNextPos
-                            || reachWalls possibleNextPos
-                    then
-                        ( model, Cmd.none )
+                possibleNextPos =
+                    f coordinates
+            in
+            if
+                hitStuff possibleNextPos (getStillBoard model.board)
+                    || reachBottom possibleNextPos
+                    || reachWalls possibleNextPos
+            then
+                ( model, Cmd.none )
 
-                    else
-                        ( { model | moving_piece = ( f coordinates, f ) }, Cmd.none )
+            else
+                ( { model | moving_piece = ( f coordinates, f ) }, Cmd.none )
 
         Gravity ( xs, f ) ->
             let
