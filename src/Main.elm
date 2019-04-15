@@ -235,6 +235,12 @@ reachBottom xs =
         /= 4
 
 
+reachWalls : Coordinates -> Bool
+reachWalls xs =
+    (xs |> List.filter (\( y, x ) -> x >= 0 && x <= 9) |> List.length)
+        /= 4
+
+
 eraseNonStill : Maybe Unit -> Maybe Unit
 eraseNonStill smth =
     case smth of
@@ -360,7 +366,10 @@ update msg model =
                         possibleNextPos =
                             List.map (\( y, x ) -> ( y, x + 1 )) coordinates
                     in
-                    if hitStuff possibleNextPos (getStillBoard model.board) then
+                    if
+                        hitStuff possibleNextPos (getStillBoard model.board)
+                            || reachWalls possibleNextPos
+                    then
                         ( model, Cmd.none )
 
                     else
@@ -374,7 +383,7 @@ update msg model =
                         possibleNextPos =
                             List.map (\( y, x ) -> ( y, x - 1 )) coordinates
                     in
-                    if hitStuff possibleNextPos (getStillBoard model.board) then
+                    if hitStuff possibleNextPos (getStillBoard model.board) || reachWalls possibleNextPos then
                         ( model, Cmd.none )
 
                     else
@@ -391,7 +400,11 @@ update msg model =
                         possibleNextPos =
                             f coordinates
                     in
-                    if hitStuff possibleNextPos (getStillBoard model.board) || reachBottom possibleNextPos then
+                    if
+                        hitStuff possibleNextPos (getStillBoard model.board)
+                            || reachBottom possibleNextPos
+                            || reachWalls possibleNextPos
+                    then
                         ( model, Cmd.none )
 
                     else
