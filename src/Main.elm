@@ -116,7 +116,7 @@ type alias Coordinates =
 
 type alias Model =
     { board : Board
-    , moving_piece : ( List ( Int, Int ), List ( Int, Int ) -> List ( Int, Int ) )
+    , moving_piece : ( Coordinates, Coordinates -> Coordinates )
     }
 
 
@@ -209,7 +209,7 @@ setOccupied x y isStill board =
         |> Maybe.withDefault board
 
 
-draw : List ( Int, Int ) -> Bool -> Board -> Board
+draw : Coordinates -> Bool -> Board -> Board
 draw lst isStill board =
     let
         newLst =
@@ -224,12 +224,12 @@ draw lst isStill board =
         |> Maybe.withDefault board
 
 
-hitStuff : List ( Int, Int ) -> Board -> Bool
+hitStuff : Coordinates -> Board -> Bool
 hitStuff possibleNextPos stillBoard =
     List.length (possibleNextPos |> List.filter (\( y, x ) -> not (isPresent (getUnit x y stillBoard)))) /= 4
 
 
-reachBottom : List ( Int, Int ) -> Bool
+reachBottom : Coordinates -> Bool
 reachBottom xs =
     (xs |> List.filter (\( y, x ) -> y < 19) |> List.length)
         /= 4
