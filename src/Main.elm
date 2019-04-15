@@ -259,14 +259,14 @@ clearLine board =
     let
         lineFull : Array (Maybe Unit) -> Bool
         lineFull arr =
-            Debug.log "length" (filter (\sq -> isPresent sq) arr |> length) == 10
+            (filter (\sq -> isPresent sq) arr |> length) == 10
 
         clear =
             board |> filter (\line -> not (lineFull line))
 
         clearedLines : Int
         clearedLines =
-            Debug.log "clearedlines" (20 - length clear)
+            20 - length clear
     in
     append (initialize clearedLines (\_ -> initialize 10 (\_ -> Nothing))) clear
 
@@ -386,10 +386,7 @@ update msg model =
                             model.moving_piece
 
                         original =
-                            Debug.log "original" coordinates
-
-                        after =
-                            Debug.log "after" (f coordinates)
+                            coordinates
 
                         possibleNextPos =
                             f coordinates
@@ -411,7 +408,7 @@ update msg model =
 
                 newBoard =
                     if not (reachBottom xs) && not (hitStuff possibleNextPos stillBoard) then
-                        Debug.log "what" (xs |> List.map (\( y, x ) -> ( y + 1, x )) |> draw) False stillBoard
+                        (xs |> List.map (\( y, x ) -> ( y + 1, x )) |> draw) False stillBoard
 
                     else
                         (xs |> draw) True stillBoard
@@ -468,4 +465,4 @@ renderBoard board =
 
 view : Model -> Html Msg
 view model =
-    div [] [ renderBoard (Debug.log "here" model.board) ]
+    div [] [ renderBoard model.board ]
