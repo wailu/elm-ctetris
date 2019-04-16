@@ -24,10 +24,10 @@ rotateT : List ( Int, Int ) -> List ( Int, Int )
 rotateT xs =
     let
         maybeHead =
-            Debug.log "originalllllllllhead" (List.head xs)
+            List.head xs
 
         maybeTail =
-            Debug.log "originalllllllllltail" (List.tail xs)
+            List.tail xs
     in
     Maybe.map2
         (\( hy, hx ) ->
@@ -161,7 +161,7 @@ rotateJ xs =
         madeVertical =
             maybeTail |> Maybe.map (\list -> List.head list) |> Maybe.withDefault Nothing |> Maybe.map (\( y, x ) -> ( y, x ) :: ( y - 1, x ) :: ( y + 1, x ) :: [])
     in
-    if Debug.log "isVertical" isVertical && isTopHalf then
+    if isVertical && isTopHalf then
         Maybe.map2 (\( y, x ) -> \list -> ( y + 2, x ) :: list) maybeHead madeHorizontal
             |> Maybe.withDefault []
 
@@ -211,7 +211,7 @@ rotateL xs =
         madeVertical =
             maybeTail |> Maybe.map (\list -> List.head list) |> Maybe.withDefault Nothing |> Maybe.map (\( y, x ) -> ( y, x ) :: ( y - 1, x ) :: ( y + 1, x ) :: [])
     in
-    if Debug.log "isVertical" isVertical && isTopHalf then
+    if isVertical && isTopHalf then
         Maybe.map2 (\( y, x ) -> \list -> ( y, x + 2 ) :: list) maybeHead madeHorizontal
             |> Maybe.withDefault []
 
