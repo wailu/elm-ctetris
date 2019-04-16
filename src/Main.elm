@@ -15,12 +15,6 @@ import Time
 
 
 
--- Issues
-{- model.moving_piece looks redundant
-   it hangs when "game over" cause of the inifinite call to update
-   can go through walls
-   at slow tick rate key presses lags
--}
 -- Main
 
 
@@ -142,7 +136,6 @@ type alias Unit =
 
 
 -- Update
--- Add a Shift Msg
 
 
 type Msg
